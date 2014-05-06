@@ -2,8 +2,8 @@
 #include <cstdlib>
 using namespace std;
 
-#include "headers/biginteger.hpp"
-#include "headers/operbiginteger.hpp"
+#include "include/biginteger.hpp"
+#include "include/operbiginteger.hpp"
 
 
 int main(){
