@@ -2,7 +2,7 @@
 
 //Librerias
 #include <iostream>
-#include "../include/biginteger.hpp"	//Contiene la definicion de la clase
+#include "../headers/biginteger.hpp"	//Contiene la definicion de la clase
 
 //Constructor
 BigInteger::BigInteger(const string &numero, const bool negativo){

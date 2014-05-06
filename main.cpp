@@ -2,8 +2,8 @@
 #include <cstdlib>
 using namespace std;
 
-#include "include/biginteger.hpp"
-#include "include/operbiginteger.hpp"
+#include "headers/biginteger.hpp"
+#include "headers/operbiginteger.hpp"
 
 
 int main(){
@@ -19,5 +19,5 @@ int main(){
 	cout<< num3.getNumero()<< " - "<< num4.getNumero()<< "= "<< oper.restar(num3,num4).getNumero()<< endl;
 	
 	
-	_Exit(EXIT_SUCCESS);
+	exit(EXIT_SUCCESS);
 }

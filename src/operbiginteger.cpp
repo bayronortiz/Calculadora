@@ -1,7 +1,7 @@
 //Definicion de las funciones miembro de la clase OperBigInteger
 
 #include <iostream>
-#include "../include/operbiginteger.hpp"
+#include "../headers/operbiginteger.hpp"
 
 
 //Constructor
