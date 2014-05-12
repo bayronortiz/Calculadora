@@ -11,12 +11,13 @@ using namespace std;
 //Inicio de Clase
 class BigInteger{
 	public:
-		BigInteger(const string &numero = "0", const bool negativo= false);	//Constructor por defecto
+		BigInteger(const string &numero = "0");	//Constructor por defecto
 		~BigInteger();		//Destructor
 		void setNumero(string);		//Establece el numero
-		void setNumero(string,const bool);		//sobrecargamos setNumero
 		string getNumero(void)const;  //Obtiene el numero tipo string, no modifica al objeto
 		stack<int> getPilaNumero(void)const;	//Obtiene la pila de enteros
+		bool getNegativo(void)const;	//Consulta si el numero es negativo
+		void setNegativo(bool);
 	
 	private:
 		bool validarNumero(string&);	//Utilitaria valida que el atributo numero, solo contenga numeros

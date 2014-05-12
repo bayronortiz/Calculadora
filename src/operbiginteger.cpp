@@ -10,8 +10,43 @@ OperBigInteger::OperBigInteger(){}
 //Destructor
 OperBigInteger::~OperBigInteger(){/*std::cout<< "Termina Objeto OperBigInteger"<< endl;*/}
 
-//Funcion miembro encargada de sumar
+
+//suma dos numeros enteros grandes
 BigInteger OperBigInteger::sumar(const BigInteger &numA, const BigInteger &numB){
+	BigInteger resultado("0"), temp;
+	
+	//Realiza los llamados a funciones dependiendo de los signos de los numeros
+	//ingresados
+	if(numA.getNegativo())
+	{
+		if(numB.getNegativo())
+		{
+			temp= numB;
+			temp.setNegativo(false);
+			resultado= this->restar(numA,temp);
+		}
+		else
+		{
+			temp= numA;
+			temp.setNegativo(false);
+			
+			resultado= this->restar(numB, temp);
+		}
+	}
+	else if(numB.getNegativo())
+	{
+		temp= numB;
+		temp.setNegativo(false);
+		resultado= this->restar(numA, temp);
+	}
+	else
+		resultado= this->operarSuma(numA, numB);
+		
+	return resultado;
+}
+
+//Funcion miembro encargada de sumar
+BigInteger OperBigInteger::operarSuma(const BigInteger &numA, const BigInteger &numB){
 	int n1=0, n2=0, totalTemp=0, sobrante= 0;
 	stack<int> pilaMayor, pilaMenor, pilaResultado;
 	string resultadoTexto;
@@ -28,6 +63,7 @@ BigInteger OperBigInteger::sumar(const BigInteger &numA, const BigInteger &numB)
 		pilaMenor= numA.getPilaNumero();
 	}
 	
+	//Operamos con ambas pilas
 	while(!pilaMayor.empty()) //Repito el ciclo hasta que la pila este vacia
 	{
 		n1= pilaMayor.top();	//Obtengo el valor de la cima de la pila Mayor
@@ -70,65 +106,185 @@ BigInteger OperBigInteger::sumar(const BigInteger &numA, const BigInteger &numB)
 
 //Funcion miembro encargada de restart
 BigInteger OperBigInteger::restar(const BigInteger &numA, const BigInteger &numB){
-	unsigned int tamA, tamB, pesoA, pesoB, n1, n2, sumTemp, sobrante;
+	BigInteger resultado("0");		//creamos un objeto de tipo bigInteger lo inicializamos en cero
+	
+	//Definimos los casos que se dan en la resta en cuanto a los signos, luego
+	//se llama a la funcion miembro privada operarResta que define la operacion como tal
+	if(numA.getNegativo())
+	{
+		if(numB.getNegativo())
+			resultado= this->operarResta(numB, numA);
+		else
+		{
+			resultado= this->operarSuma(numA, numB);
+			resultado.setNegativo(true);
+		}
+	}
+	else if(numB.getNegativo())
+		resultado= this->operarSuma(numA,numB);
+	else
+		resultado= this->operarResta(numA, numB);
+	
+	return resultado;	//Retornamos el resultado
+}
+
+//Funcion miembro encargada de multiplicar dos numeros
+BigInteger OperBigInteger::multiplicar(const BigInteger &numA, const BigInteger &numB){
+	unsigned int n, producto, sobrante=0, i, contadorCeros=0, tamVector, tamA, tamB;
+	string numeroTemp;
+	BigInteger resultadoFinal("0"), resultadoTemp;		//Guarda el resultado final del producto
+	vector<int> vectorFactor;
+	stack<int> pilaFactor, pilaTemp;
+	stack<BigInteger> pilaResultados;
+	bool signoNegativo= false;  //Bandera para controlar si el numero es negativo
+
+	//obtengo los tamaños de pilas numA, numB
+	tamA= numA.getPilaNumero().size();
+	tamB= numB.getPilaNumero().size();
+	
+	//Asignamos la pila mayor a un arreglo, y la pila menor a una pila.
+	if(tamA > tamB)
+	{
+		vectorFactor= this->pilaToVector(numA.getPilaNumero());
+		pilaFactor= numB.getPilaNumero();	
+	}
+	else
+	{
+		vectorFactor= this->pilaToVector(numB.getPilaNumero());
+		pilaFactor= numA.getPilaNumero();
+	}
+	
+	tamVector= vectorFactor.size();
+	//Realizamos el producto
+	while(!pilaFactor.empty())
+	{
+		n= pilaFactor.top();	//Obtenemos cima pila
+		pilaFactor.pop();		//desapilamos
+		
+		//Verificamos si existen ceros a agregar 
+		if(contadorCeros != 0)
+		{
+			for(i=0; i<contadorCeros; i++)
+				pilaTemp.push(0);
+		}
+		
+		//Realizamos el producto de cada factor
+		for(i=0; i<tamVector; i++)
+		{
+			producto= n * vectorFactor[i] + sobrante;	//Realizo el producto y sumo el sobrante
+			
+			if(producto >= 10)
+			{
+				sobrante= producto / 10;	//Tomamos las decenas
+				producto %= 10;		//Tomamos las unidades
+			}
+			else 
+				sobrante= 0;
+			
+			pilaTemp.push(producto);	
+		}
+		
+		//si hay sobrante lo apilamos
+		if(sobrante != 0)
+		{
+			pilaTemp.push(sobrante);
+			sobrante= 0;
+		}
+			
+		//Convierto la pilaTemp en un string y lo asignamos a un BigInteger
+		while(!pilaTemp.empty())
+		{
+			numeroTemp+= to_string(pilaTemp.top()); //Concatenamos el numero
+			pilaTemp.pop();	//Eliminamos de la pila
+		}
+		
+		//Asignamos los BigInteger en la pila de resultados temporales
+		pilaResultados.emplace(BigInteger(numeroTemp));
+		
+		//Incrementamos contador de ceros y limpiamos el string
+		contadorCeros++;
+		numeroTemp.clear();
+	}
+	
+	
+	//Ahora sumamos la pilaResultados, para obtener resultado final
+	while(!pilaResultados.empty())
+	{
+		
+		resultadoTemp= this->sumar(pilaResultados.top(), resultadoFinal);
+		
+		resultadoFinal= resultadoTemp;
+		pilaResultados.pop();
+	}
+	
+	//Observamos si algun numero es negativo
+	if(numA.getNegativo())
+	{
+		if(!numB.getNegativo())
+			signoNegativo= true;
+	}
+	else if(numB.getNegativo())
+		signoNegativo= true;
+	
+	//Le decimos al biginteger que el numero que esta tratando es negativo
+	resultadoFinal.setNegativo(signoNegativo);
+		
+	return resultadoFinal;  //Retornamos el resutadoFinal de tipo BigInteger
+}
+
+//funcion que realiza la division de enteros
+BigInteger OperBigInteger::dividir(const BigInteger &dividendo, const BigInteger &divisor){
+	BigInteger cociente("0");
+	
+	//Llamamos operar division y pasamos los numeros como parametros
+	cociente= this->operarDivision(dividendo, divisor);
+	
+	//Definimos si el resultado es positivo o negativo
+	if(dividendo.getNegativo())
+	{
+		if(!divisor.getNegativo())
+			cociente.setNegativo(true);
+	}
+	else if(divisor.getNegativo())
+		cociente.setNegativo(true);
+		
+	return cociente;
+}
+
+//Funcion miembro utilitaria que define la operacion basica de la resta
+BigInteger OperBigInteger::operarResta(const BigInteger &numA, const BigInteger &numB){
+	unsigned int  n1, n2, sumTemp, sobrante;
 	stack<int> pilaMayor, pilaMenor, pilaResultado, temp;
 	string resultadoTexto;
 	bool signoNegativo= false;
-	BigInteger resultado;
-
-	tamA= numA.getPilaNumero().size();	//Obtenemos tamaño pila A
-	tamB= numB.getPilaNumero().size();	//Obtenemos tamaño pila B
-
-	//Escogemos cual es la pilaMayor
-	if(tamA > tamB)
+	BigInteger resultado("0");
+	long long int nA= 0, nB= 0;
+	
+	//Tomamos los valores absolutos de los numeros
+	nA= labs(stoll(numA.getNumero()));
+	nB= labs(stoll(numB.getNumero()));
+	
+	if(nA == nB)
+		return resultado;		//si son iguales se retorna inmediatamente el resultado
+	else if(nA > nB)
 	{
 		pilaMayor= numA.getPilaNumero();
 		pilaMenor= numB.getPilaNumero();
 	}
-	else if(tamA < tamB)
+	else
 	{
 		pilaMayor= numB.getPilaNumero();
 		pilaMenor= numA.getPilaNumero();
-		signoNegativo= true;		//Activamos la bandera signo
-	}
-	else
-	{
-		pesoA= this->pesoPila(numA.getPilaNumero());	//Obtengo el peso de la pila numA
-		pesoB= this->pesoPila(numB.getPilaNumero());	//Obtengo el peso de la pila numB
-		
-		//definimos mayor y menor
-		if(pesoA > pesoB)
-		{
-			pilaMayor= numA.getPilaNumero();
-			pilaMenor= numB.getPilaNumero();
-		}
-		else if(pesoA < pesoB)
-		{
-			pilaMayor= numB.getPilaNumero();
-			pilaMenor= numA.getPilaNumero();
-			signoNegativo= true;		//Activamos la bandera signo		
-		}
-		else
-		{
-			if(stoll(numA.getNumero()) > stoll(numB.getNumero()))	
-			{
-				pilaMayor= numA.getPilaNumero();
-				pilaMenor= numB.getPilaNumero();
-			}
-			else
-			{
-				pilaMayor= numB.getPilaNumero();
-				pilaMenor= numA.getPilaNumero();
-				signoNegativo= true;		//Activamos la bandera signo	
-			}
-			
-		}
+		signoNegativo= true;
 	}
 
 	//Luego de tener las pilas ya seleccionadas, realizamos complemento a 1
 	//para la pilaMenor y sumamos
-	temp= this->complementoUno(pilaMenor, pilaMayor.size());
-	pilaMenor= temp;
+	if(!(pilaMenor.size() == 1 && pilaMenor.top() == 0))
+	{
+		temp= this->complementoUno(pilaMenor, pilaMayor.size());
+		pilaMenor= temp;
+	}
 	
 	while(!pilaMayor.empty())
 	{
@@ -155,7 +311,9 @@ BigInteger OperBigInteger::restar(const BigInteger &numA, const BigInteger &numB
 		
 		pilaResultado.push(sumTemp);	//Apilamos el resultado
 	}
+
 	
+	//Llevamos la pila resultado a una cadena de texto
 	while(!pilaResultado.empty())
 	{
 		resultadoTexto+= to_string(pilaResultado.top());
@@ -163,13 +321,35 @@ BigInteger OperBigInteger::restar(const BigInteger &numA, const BigInteger &numB
 	}
 	
 	if(resultadoTexto != "0")
-		resultado.setNumero(resultadoTexto,signoNegativo);	//Se asigna el numero, con o sin signo
+	{
+		resultado.setNumero(resultadoTexto);	//Se asigna el numero, con o sin signo
+		resultado.setNegativo(signoNegativo);
+	}
 	else
 		resultado.setNumero("0");
 	
 	return resultado;	//Retorna el objeto BigInteger
 }
 
+BigInteger OperBigInteger::operarDivision(const BigInteger &numA, const BigInteger &numB){
+	BigInteger cociente("0"), dividendo= numA, divisor= numB;
+	const BigInteger uno("1");
+	long long int nA= labs(stoll(numA.getNumero())), nB= labs(stoll(numB.getNumero()));
+	
+	dividendo.setNegativo(false);
+	divisor.setNegativo(false);
+	
+	while(nA >= nB)
+	{
+		dividendo= this->restar(dividendo, divisor);
+		cociente= this->sumar(cociente, uno);
+		
+		nA= stoll(dividendo.getNumero());
+		nB= stoll(divisor.getNumero());
+	}
+	
+	return cociente;
+}
 //Funcion utilitaria que encuentra el peso de la pila
 unsigned int OperBigInteger::pesoPila(stack<int> Pila){
 	unsigned int total= 0;
@@ -218,4 +398,19 @@ stack<int> OperBigInteger::complementoUno(stack<int> Pila, const unsigned int &t
 	}
 	
 	return resultado;
+}
+
+//Funcion utilitaria que lleva el contenido de una pila de enteros
+//	a un vector de numeros enteros
+vector<int> OperBigInteger::pilaToVector(stack<int> pila){
+	vector<int> vectorNumeros;
+	
+	//Asignamos cada elemento de la pila al vector
+	while(!pila.empty())
+	{
+		vectorNumeros.push_back(pila.top());
+		pila.pop();
+	}
+
+	return vectorNumeros;	//Termina funcion retornando el vectorNumeros
 }
